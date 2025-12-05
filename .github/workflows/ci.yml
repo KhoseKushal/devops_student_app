@@ -1,0 +1,30 @@
+name: CI - Build and Push
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Set variables
+      run: |
+        echo "ACR_NAME=${{ secrets.ACR_NAME }}" >> $GITHUB_ENV
+        echo "TAG=${{ github.sha }}" >> $GITHUB_ENV
+
+    - name: ACR Login
+      run: az acr login --name ${{ secrets.ACR_NAME }}
+
+    - name: Build Image
+      run: docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/student-app:${{ github.sha }} .
+
+    - name: Push Image
+      run: docker push ${{ secrets.ACR_NAME }}.azurecr.io/student-app:${{ github.sha }}
