@@ -1,39 +1,35 @@
-name: CD - Deploy to AKS
+name: CD Pipeline - Deploy to AKS
 
 on:
   workflow_dispatch:
   push:
-    paths:
-      - 'k8s/**'
-      - '.github/workflows/cd.yml'
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    - name: Login to Azure
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Set vars
-      run: |
-        echo "ACR_NAME=${{ secrets.ACR_NAME }}" >> $GITHUB_ENV
-        echo "TAG=${{ github.sha }}" >> $GITHUB_ENV
-        echo "AKS_RG=${{ secrets.AKS_RESOURCE_GROUP }}" >> $GITHUB_ENV
-        echo "AKS_NAME=${{ secrets.AKS_CLUSTER_NAME }}" >> $GITHUB_ENV
+      - name: Set AKS context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ${{ secrets.AKS_RG }}
+          cluster-name: ${{ secrets.AKS_NAME }}
 
-    - name: Get AKS Credentials
-      run: |
-        az aks get-credentials --resource-group $AKS_RG --name $AKS_NAME --admin
-
-    - name: Replace image in k8s manifest and apply
-      run: |
-        sed -i "s|<<ACR_NAME>>|${ACR_NAME}|g" k8s/deployment.yaml
-        sed -i "s|<<TAG>>|${{ github.sha }}|g" k8s/deployment.yaml
-        sed -i "s|<<MYSQL_HOST>>|${{ secrets.MYSQL_HOST }}|g" k8s/deployment.yaml
-        sed -i "s|<<MYSQL_PASSWORD>>|${{ secrets.MYSQL_PASSWORD }}|g" k8s/deployment.yaml
-        kubectl apply -f k8s/
-        kubectl rollout status deployment/student-app
+      - name: Deploy to AKS
+        uses: azure/k8s-deploy@v4
+        with:
+          manifests: |
+            k8s/deployment.yaml
+            k8s/service.yaml
+          images: |
+            ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }}
