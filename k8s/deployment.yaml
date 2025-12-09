@@ -18,7 +18,7 @@ spec:
         - name: acr-auth
       containers:
         - name: student-app
-          image: dummy/dummy:latest
+          image: devops-student-app:latest
           ports:
             - containerPort: 5000
           env:
