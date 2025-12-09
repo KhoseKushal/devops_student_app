@@ -14,15 +14,15 @@ spec:
     spec:
       containers:
       - name: student-app
-        image: <<ACR_NAME>>.azurecr.io/student-app:<<TAG>>
+        image: dummy/dummy:latest   # Will be overridden by CD pipeline
         ports:
         - containerPort: 5000
         env:
         - name: DB_HOST
-          value: "<<MYSQL_HOST>>"
+          value: "mysqlserverforproject.mysql.database.azure.com"
         - name: DB_USER
           value: "adminuser"
         - name: DB_PASSWORD
-          value: "<<MYSQL_PASSWORD>>"
+          value: "8888Kush@l"
         - name: DB_NAME
           value: "studentdb"
