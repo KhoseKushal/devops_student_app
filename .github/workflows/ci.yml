@@ -1,8 +1,10 @@
-name: CI Pipeline - Build & Push to ACR
+name: CI Pipeline - Build and Push Image
+
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -17,21 +19,19 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Buildx Setup
+      - name: Login to ACR
+        run: |
+          az acr login --name ${{ secrets.ACR_NAME }}
+
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: ACR Login
-        uses: docker/login-action@v3
+      - name: Build and Push Multi-Arch Image
+        uses: docker/build-push-action@v5
         with:
-          registry: ${{ secrets.ACR_LOGIN_SERVER }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
-
-      - name: Build & Push Multi-Arch Image (ARM64 + AMD64)
-        run: |
-          docker buildx build \
-            --platform linux/amd64,linux/arm64 \
-            -t ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:latest \
-            -t ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }} \
-            --push .
-
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:latest
+            ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }}
+          platforms: linux/amd64,linux/arm64

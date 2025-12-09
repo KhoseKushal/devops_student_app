@@ -18,7 +18,8 @@ spec:
         - name: acr-auth
       containers:
         - name: student-app
-          image: kushalacr123.azurecr.io/devops-student-app:latest
+          image: kushalacr123.azurecr.io/devops-student-app:${tag}  # Updated to use the tag placeholder
+
           ports:
             - containerPort: 5000
           env:
