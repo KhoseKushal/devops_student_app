@@ -1,29 +1,50 @@
-name: CI Pipeline - Build & Push to ACR
+name: CI Pipeline - Build & Push Image
 
 on:
   push:
-    branches: 
+    branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
-      - name: Log in to Azure Container Registry
-        uses: docker/login-action@v3
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Login to Azure using Service Principal
+      - name: Azure Login
+        uses: azure/login@v1
         with:
-          registry: ${{ secrets.ACR_LOGIN_SERVER }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Step 3: Azure Container Registry Login
+      - name: Login to ACR
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      - name: Build Docker image
-        run: |
-          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }} .
+      # Step 4: Enable Docker Buildx (for multi-architecture images)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      - name: Push Docker image
+      # Step 5: Build Multi-Architecture Image & Push to ACR
+      - name: Build & Push Multi-Arch Image
         run: |
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }}
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            -t ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }} \
+            -t ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:latest \
+            --push .
+
+      # Step 6: Print image details (debugging)
+      - name: Confirm Built Images
+        run: |
+          echo "Image pushed to:"
+          echo "${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }}"
+          echo "${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:latest"
