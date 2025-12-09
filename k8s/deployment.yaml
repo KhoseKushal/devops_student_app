@@ -12,9 +12,11 @@ spec:
       labels:
         app: student-app
     spec:
+      imagePullSecrets:
+        - name: acr-auth
       containers:
       - name: student-app
-        image: dummy/dummy:latest   # Will be overridden by CD pipeline
+        image: dummy/dummy:latest
         ports:
         - containerPort: 5000
         env:
