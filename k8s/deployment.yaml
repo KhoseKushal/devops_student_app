@@ -18,7 +18,7 @@ spec:
         - name: acr-auth
       containers:
         - name: student-app
-          image: devops-student-app:latest
+          image: kushalacr123.azurecr.io/devops-student-app:latest
           ports:
             - containerPort: 5000
           env:
