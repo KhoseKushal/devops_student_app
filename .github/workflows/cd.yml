@@ -35,6 +35,6 @@ jobs:
             k8s/deployment.yaml
             k8s/service.yaml
           images: |
-            ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:12
+            ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }}
           imagepullsecrets: |
             acr-auth
