@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: student-app
+  labels:
+    app: student-app
 spec:
   replicas: 2
   selector:
@@ -15,16 +17,16 @@ spec:
       imagePullSecrets:
         - name: acr-auth
       containers:
-      - name: student-app
-        image: dummy/dummy:latest
-        ports:
-        - containerPort: 5000
-        env:
-        - name: DB_HOST
-          value: "mysqlserverforproject.mysql.database.azure.com"
-        - name: DB_USER
-          value: "adminuser"
-        - name: DB_PASSWORD
-          value: "8888Kush@l"
-        - name: DB_NAME
-          value: "studentdb"
+        - name: student-app
+          image: dummy/dummy:latest
+          ports:
+            - containerPort: 5000
+          env:
+            - name: DB_HOST
+              value: "mysqlserverforproject.mysql.database.azure.com"
+            - name: DB_USER
+              value: "adminuser"
+            - name: DB_PASSWORD
+              value: "8888Kush@l"
+            - name: DB_NAME
+              value: "studentdb"
