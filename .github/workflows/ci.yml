@@ -19,6 +19,13 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      #debug acr login 
+      - name: Debug ACR secrets
+        run: |
+          echo "ACR_NAME=>>${{ secrets.ACR_NAME }}<<"
+          echo "ACR_LOGIN_SERVER=>>${{ secrets.ACR_LOGIN_SERVER }}<<" 
+          
 
       # Login to ACR
       - name: ACR Login
