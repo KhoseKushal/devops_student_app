@@ -8,7 +8,6 @@ on:
 
 jobs:
   deploy:
-    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -20,14 +19,11 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Set AKS Context
+      - name: Set AKS context
         uses: azure/aks-set-context@v3
         with:
           resource-group: ${{ secrets.AKS_RG }}
           cluster-name: ${{ secrets.AKS_NAME }}
-
-      - name: Debug Tag Received from CI
-        run: echo "Deploying IMAGE_TAG=${{ needs.build.outputs.IMAGE_TAG }}"
 
       - name: Deploy to AKS
         uses: azure/k8s-deploy@v4
@@ -36,6 +32,6 @@ jobs:
             k8s/deployment.yaml
             k8s/service.yaml
           images: |
-            ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ needs.build.outputs.IMAGE_TAG }}
+            ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }}
           imagepullsecrets: |
             acr-auth

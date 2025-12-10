@@ -10,43 +10,34 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    outputs:
-      IMAGE_TAG: ${{ steps.image.outputs.IMAGE_TAG }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Azure Login
       - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Set IMAGE_TAG = short commit SHA
-      - name: Set image tag
-        id: tag
-        run: echo "IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
+      - name: Debug ACR secrets
+        run: |
+          echo "ACR_NAME=${{ secrets.ACR_NAME }}"
+          echo "ACR_LOGIN_SERVER=${{ secrets.ACR_LOGIN_SERVER }}"
 
-      - name: Debug image tag
-        run: echo "IMAGE_TAG is $IMAGE_TAG"
-
-      # Login to ACR
       - name: ACR Login
-        run: az acr login --name ${{ secrets.ACR_NAME }}
+        run: |
+          az acr login --name ${{ secrets.ACR_NAME }}
 
-      # Build & Push Docker image
-      - name: Build and Push Image
+      - name: Build and Push Image (single arch)
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
           push: true
+          platforms: linux/amd64
           tags: |
             ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:latest
-            ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ env.IMAGE_TAG }}
+            ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }}
 
-      # Export IMAGE_TAG to CD
-      - name: Export IMAGE_TAG
-        id: image
-        run: echo "IMAGE_TAG=${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
+      - name: Output image tag
+        id: imageinfo
+        run: echo "IMAGE_TAG=${{ github.run_number }}" >> $GITHUB_OUTPUT
