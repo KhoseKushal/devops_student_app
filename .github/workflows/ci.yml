@@ -19,30 +19,21 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Debug ACR secrets
-        run: |
-          echo "ACR_NAME=${{ secrets.ACR_NAME }}"
-          echo "ACR_LOGIN_SERVER=${{ secrets.ACR_LOGIN_SERVER }}"
-
       - name: ACR Login
         run: |
-          az acr login --name ${{ secrets.ACR_NAME }}
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: image=moby/buildkit:master   
+          az acr login -n ${{ secrets.ACR_NAME }}
 
-      - name: Build and Push Multi-Arc Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64,linux/arm64
-          builder: default
-            ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:latest
-            ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }}
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }} .
+          docker tag ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }} \
+                     ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:latest
 
-      - name: Output image tag
+      - name: Push to ACR
+        run: |
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }}
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:latest
+
+      - name: Set output
         id: imageinfo
         run: echo "IMAGE_TAG=${{ github.run_number }}" >> $GITHUB_OUTPUT
