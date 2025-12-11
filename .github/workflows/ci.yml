@@ -27,14 +27,19 @@ jobs:
       - name: ACR Login
         run: |
           az acr login --name ${{ secrets.ACR_NAME }}
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: image=moby/buildkit:master   
 
-      - name: Build and Push Image (single arch)
+      - name: Build and Push Multi-Arc Image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          platforms: linux/amd64
-          tags: |
+          platforms: linux/amd64,linux/arm64
+          builder: default
             ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:latest
             ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }}
 
