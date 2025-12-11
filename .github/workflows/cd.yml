@@ -1,17 +1,17 @@
 name: CD Pipeline - Deploy to AKS
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["CI Pipeline - Build & Push to ACR"]
+    types: [ completed ]
 
 jobs:
   deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Azure Login
@@ -20,10 +20,10 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Set AKS context
-        uses: azure/aks-set-context@v3
-        with:
-          resource-group: ${{ secrets.AKS_RG }}
-          cluster-name: ${{ secrets.AKS_NAME }}
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ secrets.AKS_RG }} \
+            --name ${{ secrets.AKS_NAME }} --overwrite-existing
 
       - name: Deploy to AKS
         uses: azure/k8s-deploy@v4
@@ -32,6 +32,6 @@ jobs:
             k8s/deployment.yaml
             k8s/service.yaml
           images: |
-            ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }}
-          imagepullsecrets: |
-            acr-auth
+            ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.sha }}
+          imagepullsecrets: acr-auth
+          namespace: default
