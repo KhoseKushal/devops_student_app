@@ -23,17 +23,17 @@ jobs:
         run: |
           az acr login -n ${{ secrets.ACR_NAME }}
 
-      - name: Build Docker image
+      - name: Build & Tag image
         run: |
-          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }} .
-          docker tag ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }} \
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.sha }} .
+          docker tag ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.sha }} \
                      ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:latest
 
-      - name: Push to ACR
+      - name: Push image
         run: |
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.run_number }}
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:${{ github.sha }}
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/devops-student-app:latest
 
       - name: Set output
         id: imageinfo
-        run: echo "IMAGE_TAG=${{ github.run_number }}" >> $GITHUB_OUTPUT
+        run: echo "IMAGE_TAG=${{ github.sha }}" >> $GITHUB_OUTPUT
